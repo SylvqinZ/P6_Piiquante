@@ -2,12 +2,16 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const sauceRoutes = require("./routes/sauce");
 const userRoutes = require("./routes/user");
+require('dotenv').config()
 const path = require("path");
 const mongoose = require("mongoose");
 
+
+
+
 mongoose
   .connect(
-    "mongodb+srv://sylvain:AAuN6nHDBuQyMEGF@cluster0.ysfmhxn.mongodb.net/?retryWrites=true&w=majority",
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/?retryWrites=true&w=majority`,
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(() => console.log("Connexion à MongoDB réussie !"))
@@ -15,7 +19,6 @@ mongoose
 
 const app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
