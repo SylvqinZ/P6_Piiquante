@@ -1,14 +1,13 @@
 const express = require("express");
+const helmet = require("helmet");
 const bodyParser = require("body-parser");
 const sauceRoutes = require("./routes/sauce");
 const userRoutes = require("./routes/user");
-require('dotenv').config()
+require("dotenv").config();
 const path = require("path");
+const mongoSanitize = require("express-mongo-sanitize");
+
 const mongoose = require("mongoose");
-
-
-
-
 mongoose
   .connect(
     `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/?retryWrites=true&w=majority`,
@@ -17,9 +16,45 @@ mongoose
   .then(() => console.log("Connexion à MongoDB réussie !"))
   .catch(() => console.log("Connexion à MongoDB échouée !"));
 
+  
+
 const app = express();
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "https://www.googletagmanager.com",
+          "'self'",
+          "https://www.google-analytics.com",
+          "'unsafe-inline'",
+          "mydomain.com",
+        ],
+        imgSrc: ["'self'", "assets.mydomain.com"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+  })
+);
+
+
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply the rate limiting middleware to all requests
+app.use(limiter);
+
 
 app.use(bodyParser.json());
+app.use(mongoSanitize());
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
