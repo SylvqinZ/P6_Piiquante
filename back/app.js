@@ -21,21 +21,7 @@ mongoose
 const app = express();
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "https://www.googletagmanager.com",
-          "'self'",
-          "https://www.google-analytics.com",
-          "'unsafe-inline'",
-          "mydomain.com",
-        ],
-        imgSrc: ["'self'", "assets.mydomain.com"],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
+   
     crossOriginResourcePolicy: false,
   })
 );
@@ -44,7 +30,7 @@ app.use(
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  max: 500, // Limit each IP to 500 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
