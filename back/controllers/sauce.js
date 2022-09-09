@@ -37,45 +37,34 @@ exports.getOneSauce = (req, res, next) => {
 };
 
 exports.modifySauce = (req, res, next) => {
+  let sauceObject = { ...req.body };
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      if (req.file) {
-        const filename = sauce.imageUrl.split("/images/")[1];
-        fs.unlink(`images/${filename}`, () => {
-          const sauceObject = {
+      if (sauce.userId != req.auth.userId) {
+        res.status(403).json({ message: "Not authorized" });
+      } else {
+        if (req.file) {
+          // Deleting file
+          const filename = sauce.imageUrl.split("/images/")[1];
+          fs.unlink(`images/${filename}`, () => {});
+          // Overriding sauceObject
+          sauceObject = {
             ...JSON.parse(req.body.sauce),
             imageUrl: `${req.protocol}://${req.get("host")}/images/${
               req.file.filename
             }`,
           };
-          if (sauce.userId != req.auth.userId) {
-            res.status(403).json({ message: "Not authorized" });
-          } else {
-            Sauce.updateOne(
-              { _id: req.params.id },
-              { ...sauceObject, _id: req.params.id }
-            )
-              .then(() => {
-                res.status(200).json({ message: "Sauce updated !" });
-              })
-              .catch((error) => res.status(401).json({ error }));
-          }
-        });
-      } else {
-        const sauceObject = { ...req.body };
-        if (sauce.userId != req.auth.userId) {
-          res.status(403).json({ message: "Not authorized" });
-        } else {
-          Sauce.updateOne(
-            { _id: req.params.id },
-            { ...sauceObject, _id: req.params.id }
-          )
-            .then(() => {
-              res.status(200).json({ message: "Sauce updated !" });
-            })
-            .catch((error) => res.status(401).json({ error }));
         }
-      } 
+        // Updating sauce
+        Sauce.updateOne(
+          { _id: req.params.id },
+          { ...sauceObject, _id: req.params.id }
+        )
+          .then(() => {
+            res.status(200).json({ message: "Sauce updated !" });
+          })
+          .catch((error) => res.status(401).json({ error }));
+      }
     })
     .catch((error) => {
       res.status(500).json({ error });
